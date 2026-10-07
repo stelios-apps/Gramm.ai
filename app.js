@@ -15,6 +15,7 @@ const WORKER_URL = "https://gramm.stelios-andritsakis.workers.dev";
 
 const $ = id => document.getElementById(id), qa = s => document.querySelectorAll(s);
 const ic = n => `<svg class="i"><use href="#i-${n}"/></svg>`;
+const tfetch = (u, o, ms = 25000) => { const c = new AbortController(), t = setTimeout(() => c.abort(), ms); return fetch(u, { ...o, signal: c.signal }).finally(() => clearTimeout(t)); };
 const cloudOn = !!firebaseConfig.apiKey;
 const today = () => new Date().toISOString().slice(0, 10);
 const LS = (k, v) => v === undefined ? JSON.parse(localStorage.getItem(k) || 'null') : localStorage.setItem(k, JSON.stringify(v));
@@ -116,7 +117,7 @@ async function analyze(text) {
   const token = await user.getIdToken();
   const heavy = Object.values(days).flatMap(d => d.meals).filter(m => m.dig >= 4).map(m => m.name);
   const prompt = `Είσαι διατροφολόγος. Ανάλυσε το γεύμα: "${text}". Επίστρεψε ΜΟΝΟ JSON με πεδία: name (σύντομος ελληνικός τίτλος), kcal, protein, carbs, fat (αριθμοί, συνολικά για όλη την ποσότητα), salty (boolean: πολύ αλάτι), imageQuery (2-3 αγγλικές λέξεις για αναζήτηση φωτογραφίας), warning (string στα ελληνικά ή null). Για το warning: αν το γεύμα μοιάζει με κάποιο από αυτά που ο χρήστης βρήκε βαρύ [${heavy.join('; ')}], γράψε σύντομη προειδοποίηση, αλλιώς null.`;
-  const r = await fetch(WORKER_URL + '/gemini', {
+  const r = await tfetch(WORKER_URL + '/gemini', {
     method: 'POST', headers: { 'Content-Type': 'application/json', Authorization: 'Bearer ' + token },
     body: JSON.stringify({ contents: [{ parts: [{ text: prompt }] }], generationConfig: { responseMimeType: 'application/json' } }) });
   if (!r.ok) { const t = await r.text().catch(() => ''); throw new Error('Σφάλμα AI (' + r.status + '): ' + t.slice(0, 180)); }
@@ -135,7 +136,7 @@ async function logMeal() {
     day().meals.unshift({ name: a.name, kcal: +a.kcal || 0, protein: +a.protein || 0, carbs: +a.carbs || 0, fat: +a.fat || 0, salty: !!a.salty, warning: a.warning || null, img, dig: 0,
       time: new Date().toLocaleTimeString('el-GR', { hour: '2-digit', minute: '2-digit' }) });
     await save(); $('logInput').value = ''; $('sheet').classList.remove('on'); renderAll(); renderMeals(true); show('meals');
-  } catch (e) { $('logStatus').textContent = e instanceof TypeError ? 'Δεν έφτασε το αίτημα στο Worker. Έλεγξε το ALLOWED και το Deploy στο Cloudflare.' : e.message; }
+  } catch (e) { $('logStatus').textContent = e.name === 'AbortError' ? 'Το Worker δεν απάντησε σε 25 δευτερόλεπτα (κολλάει στο Gemini ή στο Firebase).' : e instanceof TypeError ? 'Δεν έφτασε το αίτημα στο Worker (ALLOWED ή Deploy).' : e.message; }
   $('logBtn').classList.remove('busy');
 }
 
@@ -149,7 +150,7 @@ qa('nav [data-v]').forEach(b => b.onclick = () => show(b.dataset.v));
 $('aiBtn').onclick = () => { $('sheet').classList.add('on'); setTimeout(() => $('logInput').focus(), 200); };
 $('sheet').onclick = e => { if (e.target === $('sheet')) $('sheet').classList.remove('on'); };
 $('closeSheet').onclick = () => $('sheet').classList.remove('on');
-$('logBtn').onclick = logMeal; $('logInput').onkeydown = e => e.key === 'Enter' && logMeal();
+$('logBtn').onclick = logMeal; $('logInput').onkeydown = e => { if (e.key === 'Enter') logMeal(); };
 $('addWater').onclick = () => { day().water += .25; save(); renderWater(); };
 $('workoutBtn').onclick = () => { day().workout = !day().workout; save(); renderWater(); };
 $('lockRange').oninput = e => { day().lock = +e.target.value; renderBank(); }; $('lockRange').onchange = save;
