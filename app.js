@@ -135,7 +135,7 @@ async function logMeal() {
     day().meals.unshift({ name: a.name, kcal: +a.kcal || 0, protein: +a.protein || 0, carbs: +a.carbs || 0, fat: +a.fat || 0, salty: !!a.salty, warning: a.warning || null, img, dig: 0,
       time: new Date().toLocaleTimeString('el-GR', { hour: '2-digit', minute: '2-digit' }) });
     await save(); $('logInput').value = ''; $('sheet').classList.remove('on'); renderAll(); renderMeals(true); show('meals');
-  } catch (e) { $('logStatus').textContent = e.message; }
+  } catch (e) { $('logStatus').textContent = e instanceof TypeError ? 'Δεν έφτασε το αίτημα στο Worker. Έλεγξε το ALLOWED και το Deploy στο Cloudflare.' : e.message; }
   $('logBtn').classList.remove('busy');
 }
 
