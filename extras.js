@@ -63,3 +63,4 @@ $('bwSave').onclick = async () => {
 };
 document.querySelector('nav [data-v="me"]').addEventListener('click', drawBw);
 drawBw();
+import('./extras2.js?v=1');
