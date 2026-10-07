@@ -15,7 +15,7 @@ const WORKER_URL = "https://gramm.stelios-andritsakis.workers.dev";
 const $ = id => document.getElementById(id), qa = s => document.querySelectorAll(s);
 const ic = n => `<svg class="i"><use href="#i-${n}"/></svg>`;
 const tfetch = (u, o, ms = 30000) => { const c = new AbortController(), t = setTimeout(() => c.abort(), ms); return fetch(u, { ...o, signal: c.signal }).finally(() => clearTimeout(t)); };
-const today = () => new Date().toISOString().slice(0, 10);
+const today = () => new Date().toLocaleDateString('sv-SE');
 const LS = (k, v) => v === undefined ? JSON.parse(localStorage.getItem(k) || 'null') : localStorage.setItem(k, JSON.stringify(v));
 const app = initializeApp(firebaseConfig), auth = getAuth(app), db = getFirestore(app);
 let user = null;
@@ -70,7 +70,7 @@ function renderProtein() {
   bar.innerHTML = Array.from({ length: 10 }, (_, i) => `<i class="${i < Math.round(pct * 10) ? 'f' : ''}"></i>`).join('');
   $('pVal').textContent = fmt(p); $('pGoal').textContent = g;
 }
-function weekKeys() { const d = new Date(), wd = (d.getDay() + 6) % 7; return Array.from({ length: 7 }, (_, i) => { const x = new Date(d); x.setDate(d.getDate() - wd + i); return x.toISOString().slice(0, 10); }); }
+function weekKeys() { const d = new Date(), wd = (d.getDay() + 6) % 7; return Array.from({ length: 7 }, (_, i) => { const x = new Date(d); x.setDate(d.getDate() - wd + i); return x.toLocaleDateString('sv-SE'); }); }
 function renderBank() {
   const keys = weekKeys(), t = today(); let bank = 0, max = 1;
   const vals = keys.map(k => { const d = days[k]; if (!d || !d.meals.length) return null; const v = (d.goal || G().kcal) - d.meals.reduce((a, m) => a + m.kcal, 0); if (k < t) bank += v; max = Math.max(max, Math.abs(v)); return v; });
@@ -120,7 +120,7 @@ function renderAll() {
   renderGauge(); renderProtein(); renderBank(); renderWater(); renderMeals(); renderStrip(); renderPlan();
   $('hello').textContent = 'Γεια σου' + (cfg.name ? ', ' + cfg.name : '');
   $('date').textContent = new Date().toLocaleDateString('el-GR', { weekday: 'long', day: 'numeric', month: 'long' });
-  let s = 0; for (const k of Object.keys(days).sort().reverse()) { if (days[k].meals.length) s++; else if (k !== today()) break; } $('streak').textContent = s;
+  let s = 0; for (let i = 0; i < 400; i++) { const x = new Date(); x.setDate(x.getDate() - i); const d = days[x.toLocaleDateString('sv-SE')]; if (d && d.meals.length) s++; else if (i > 0) break; } $('streak').textContent = s;
 }
 
 // ===== GEMINI (μέσω Worker) =====
@@ -203,4 +203,4 @@ onAuthStateChanged(auth, async u => {
 ['gesturestart', 'gesturechange', 'gestureend'].forEach(ev => document.addEventListener(ev, e => e.preventDefault()));
 renderAll();
 window.FU = { get cfg() { return cfg; }, get days() { return days; }, day, save, renderAll, gemini, G, sum, show, today };
-import('./extras.js?v=1');
+import('./extras.js?v=2');
