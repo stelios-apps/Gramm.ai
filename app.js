@@ -1,151 +1,164 @@
-// ===== DUMMY DATA (θα αντικατασταθεί από Firebase στο επόμενο βήμα) =====
-const GOAL = { kcal: 2000, protein: 170, water: 2.5 };
-const state = {
-  workout: false,
-  water: 1.25,
-  lock: 600,
-  meals: [
-    { icon: '🥣', name: 'Γιαούρτι 2% με whey & βρώμη', time: '08:30', kcal: 420, p: 42, c: 38, f: 9, salty: false, dig: 1 },
-    { icon: '🍫', name: 'Alpro Dark Chocolate 250ml', time: '11:15', kcal: 150, p: 4, c: 17, f: 6, salty: false, dig: 2 },
-    { icon: '🌯', name: '2 τυλιχτά μπιφτέκι (χωρίς πατάτες)', time: '14:10', kcal: 610, p: 56, c: 48, f: 24, salty: true, dig: 4,
-      warn: 'Την προηγούμενη φορά αυτό σε φούσκωσε (βαθμός 4/5).' },
-  ],
-  // Διαφορά στόχου - κατανάλωσης ανά μέρα (Δευ, Τρι ολοκληρωμένες, Τετ = σήμερα)
-  week: [['Δ', 320], ['Τ', 540], ['Τ', null], ['Π', 0], ['Π', 0], ['Σ', 0], ['Κ', 0]],
-  friends: [
-    { n: 'Μαρία', c: '#fb7185', s: 96 }, { n: 'Νίκος (εσύ)', c: '#8b5cf6', s: 88, me: true },
-    { n: 'Γιάννης', c: '#22d3ee', s: 81 }, { n: 'Ελένη', c: '#fbbf24', s: 64 },
-  ],
-};
+import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
+import { getAuth, GoogleAuthProvider, signInWithPopup, signOut, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js";
+import { getFirestore, doc, setDoc, getDocs, collection } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
 
-const $ = id => document.getElementById(id);
-const sum = k => state.meals.reduce((a, m) => a + m[k], 0);
-const fmt = n => n.toLocaleString('el-GR');
+// ===== ΡΥΘΜΙΣΕΙΣ: βάλε εδώ το firebaseConfig σου (Βήμα Β στις οδηγίες) =====
+const firebaseConfig = { apiKey: "", authDomain: "", projectId: "", appId: "" };
+const WORKER_URL = ""; // το URL του Cloudflare Worker, π.χ. "https://fuelup.ONOMA.workers.dev"
 
-function countUp(el, to, ms = 1400) {
-  const from = +el.dataset.v || 0, t0 = performance.now();
-  el.dataset.v = to;
-  const step = t => {
-    const k = Math.min((t - t0) / ms, 1), e = 1 - Math.pow(1 - k, 3);
-    el.textContent = fmt(Math.round(from + (to - from) * e));
-    if (k < 1) requestAnimationFrame(step);
-  };
-  requestAnimationFrame(step);
+const $ = id => document.getElementById(id), qa = s => document.querySelectorAll(s);
+const ic = n => `<svg class="i"><use href="#i-${n}"/></svg>`;
+const cloudOn = !!firebaseConfig.apiKey;
+const today = () => new Date().toISOString().slice(0, 10);
+const LS = (k, v) => v === undefined ? JSON.parse(localStorage.getItem(k) || 'null') : localStorage.setItem(k, JSON.stringify(v));
+
+let app, auth, db, user = null;
+if (cloudOn) { app = initializeApp(firebaseConfig); auth = getAuth(app); db = getFirestore(app); }
+
+let cfg = Object.assign({ kcal: 2000, protein: 170, water: 2.5, gemini: '', unsplash: '', name: '' }, LS('fuel_cfg'));
+let days = LS('fuel_days') || {};
+const blank = () => ({ meals: [], water: 0, workout: false, lock: 600 });
+const day = () => days[today()] || (days[today()] = blank());
+const sum = k => day().meals.reduce((a, m) => a + (m[k] || 0), 0);
+const fmt = n => Math.round(n).toLocaleString('el-GR');
+
+// ===== ΑΠΟΘΗΚΕΥΣΗ (Firestore αν είσαι συνδεδεμένος, αλλιώς τοπικά) =====
+async function save() {
+  LS('fuel_days', days);
+  if (!user) return;
+  const pct = Math.min(sum('protein') / cfg.protein, 1) * 100;
+  await setDoc(doc(db, 'users', user.uid, 'days', today()), day());
+  await setDoc(doc(db, 'users', user.uid), { name: user.displayName || 'Χρήστης', score: Math.round(pct), date: today(), goals: { kcal: cfg.kcal, protein: cfg.protein, water: cfg.water } }, { merge: true });
+}
+async function loadCloud() {
+  const s = await getDocs(collection(db, 'users', user.uid, 'days'));
+  s.forEach(d => days[d.id] = Object.assign(blank(), d.data()));
+  LS('fuel_days', days);
 }
 
 // ===== RENDER =====
+function renderGauge() {
+  const N = 16, pct = Math.min(sum('kcal') / cfg.kcal, 1), svg = $('arc');
+  let h = '';
+  for (let i = 0; i < N; i++) {
+    const a = -120 + (i / (N - 1)) * 240;
+    h += `<rect class="seg ${i < pct * N ? 'f' : ''}" x="136" y="14" width="28" height="42" rx="11" transform="rotate(${a} 150 130)" style="animation-delay:${i * .12}s"/>`;
+  }
+  svg.innerHTML = h;
+  $('kcalEaten').textContent = fmt(sum('kcal')); $('kcalGoal').textContent = fmt(cfg.kcal);
+}
 function renderProtein() {
-  const p = sum('p'), pct = Math.min(p / GOAL.protein, 1), card = document.querySelector('.protein');
-  const [color, msg] =
-    pct >= 1   ? ['#4ade80', '🎯 Στόχος πρωτεΐνης ολοκληρώθηκε!'] :
-    pct >= .75 ? ['#22d3ee', 'Σχεδόν έτοιμος, ένα γεύμα ακόμα'] :
-    pct >= .4  ? ['#fbbf24', 'Καλή πορεία, συνέχισε'] :
-                 ['#fb7185', 'Χρειάζεσαι περισσότερη πρωτεΐνη'];
-  card.style.setProperty('--pc', color);
-  card.classList.toggle('done', pct >= 1);
-  $('proteinArc').style.strokeDashoffset = 540.4 * (1 - pct);
-  $('proteinMsg').textContent = msg;
-  countUp($('proteinVal'), p);
+  const p = sum('protein'), pct = Math.min(p / cfg.protein, 1), bar = $('pBar');
+  const col = pct >= 1 ? '#34c58a' : pct >= .75 ? '#7ac943' : pct >= .4 ? '#ff8a4c' : '#ef5b5b';
+  bar.style.setProperty('--pc', col); bar.classList.toggle('done', pct >= 1);
+  bar.innerHTML = Array.from({ length: 10 }, (_, i) => `<i class="${i < Math.round(pct * 10) ? 'f' : ''}"></i>`).join('');
+  $('pVal').textContent = fmt(p); $('pGoal').textContent = cfg.protein;
 }
-
-function renderKcal() {
-  const e = sum('kcal');
-  countUp($('kcalEaten'), e);
-  $('kcalGoal').textContent = fmt(GOAL.kcal);
-  $('kcalLeft').textContent = fmt(Math.max(GOAL.kcal - e, 0)) + ' kcal';
-  $('kcalBar').style.width = Math.min(e / GOAL.kcal * 100, 100) + '%';
-  $('mCarb').textContent = sum('c') + ' g';
-  $('mFat').textContent = sum('f') + ' g';
-  $('mPro').textContent = sum('p') + ' g';
+function weekKeys() {
+  const d = new Date(), wd = (d.getDay() + 6) % 7;
+  return Array.from({ length: 7 }, (_, i) => { const x = new Date(d); x.setDate(d.getDate() - wd + i); return x.toISOString().slice(0, 10); });
 }
-
 function renderBank() {
-  const todayIdx = 2, eaten = sum('kcal');
-  const days = state.week.map(([l, v], i) => [l, i === todayIdx ? GOAL.kcal - eaten : v]);
-  const banked = state.week.slice(0, todayIdx).reduce((a, [, v]) => a + v, 0);
-  countUp($('bankTotal'), banked);
-  const max = Math.max(...days.map(([, v]) => Math.abs(v)), 1);
-  $('bankDays').innerHTML = days.map(([l, v], i) =>
-    `<div class="dayCol ${v < 0 ? 'neg' : ''} ${i === todayIdx ? 'today' : ''}">
-       <i data-h="${Math.abs(v) / max * 100}%"></i><span>${l}</span></div>`).join('');
-  requestAnimationFrame(() => document.querySelectorAll('.dayCol i').forEach(i => i.style.height = i.dataset.h));
-  renderLock();
+  const keys = weekKeys(), t = today(); let bank = 0, max = 1;
+  const vals = keys.map(k => { const d = days[k]; if (!d || !d.meals.length) return null; const v = cfg.kcal - d.meals.reduce((a, m) => a + m.kcal, 0); if (k < t) bank += v; max = Math.max(max, Math.abs(v)); return v; });
+  $('bankTotal').textContent = fmt(Math.max(bank, 0));
+  $('bankDays').innerHTML = vals.map((v, i) => `<i class="${v < 0 ? 'n' : ''} ${keys[i] === t ? 't' : ''}" style="height:${v === null ? 3 : Math.max(Math.abs(v) / max * 100, 8)}%"></i>`).join('');
+  const left = cfg.kcal - sum('kcal') - day().lock;
+  $('lockRange').value = day().lock; $('lockVal').textContent = day().lock;
+  $('lockMsg').textContent = left >= 0 ? `Μένουν ${fmt(left)} kcal για πριν το βράδυ` : `Ξεπερνάς κατά ${fmt(-left)} kcal`;
 }
-
-function renderLock() {
-  const left = GOAL.kcal - sum('kcal') - state.lock;
-  $('lockVal').textContent = fmt(state.lock) + ' kcal';
-  $('lockMsg').textContent = left >= 0
-    ? `Κρατάς ${fmt(state.lock)} kcal για το βράδυ. Σου μένουν ${fmt(left)} kcal για το υπόλοιπο της μέρας.`
-    : `Ξεπερνάς τον στόχο κατά ${fmt(-left)} kcal. Μείωσε το κλείδωμα ή το επόμενο γεύμα.`;
-}
-
+function waterGoal() { return cfg.water + (day().workout ? .5 : 0) + (day().meals.some(m => m.salty) ? .3 : 0); }
 function renderWater() {
-  const goal = GOAL.water + (state.workout ? 0.5 : 0) + (state.meals.some(m => m.salty) ? 0.3 : 0);
-  $('waterGoal').textContent = goal.toFixed(1);
-  $('waterVal').textContent = state.water.toFixed(2).replace(/0$/, '');
-  $('waterBar').style.width = Math.min(state.water / goal * 100, 100) + '%';
-  const why = [];
-  if (state.meals.some(m => m.salty)) why.push('+0.3 L για αλμυρό γεύμα');
-  if (state.workout) why.push('+0.5 L για προπόνηση');
-  $('waterNote').textContent = why.length ? 'Ο στόχος ανέβηκε: ' + why.join(', ') + ' (αποφυγή κατακράτησης).' : 'Βασικός στόχος νερού.';
+  const g = waterGoal(), d = day(), why = [];
+  if (d.meals.some(m => m.salty)) why.push('+0.3L αλμυρό γεύμα'); if (d.workout) why.push('+0.5L προπόνηση');
+  $('waterVal').textContent = d.water.toFixed(2).replace(/0$/, ''); $('waterGoal').textContent = g.toFixed(1);
+  $('waterFill').style.width = Math.min(d.water / g * 100, 100) + '%';
+  $('waterNote').textContent = why.join(' • ') || 'Βασικός στόχος';
+  $('workoutBtn').classList.toggle('on', d.workout);
+}
+function renderMeals(fresh) {
+  const ms = day().meals;
+  $('meals').innerHTML = ms.length ? ms.map((m, i) => `
+  <article class="meal ${fresh && i === 0 ? 'new' : ''}">
+    <div class="thumb" style="${m.img ? `background-image:url('${m.img}')` : ''}">${m.img ? '' : ic('fork')}</div>
+    <div><b class="n">${m.name}</b><div class="macros">${m.time} • Π ${m.protein}g • Υ ${m.carbs}g • Λ ${m.fat}g</div></div>
+    <div class="k">${fmt(m.kcal)}<div class="macros">kcal</div></div>
+    <div class="dig">Χώνεψη <span>${[1, 2, 3, 4, 5].map(n => `<button data-i="${i}" data-n="${n}" class="${m.dig === n ? 'on' : ''}">${n}</button>`).join('')}</span></div>
+    ${m.warning ? `<div class="warn">${ic('alert')}${m.warning}</div>` : ''}
+  </article>`).join('') : '<p class="empty">Δεν υπάρχει καταχώρηση ακόμα. Πάτα το κεντρικό κουμπί.</p>';
+  qa('.dig button').forEach(b => b.onclick = () => { day().meals[b.dataset.i].dig = +b.dataset.n; save(); renderMeals(); });
+}
+async function renderBoard() {
+  const me = user ? user.uid : null; let rows = [];
+  if (user) { const s = await getDocs(collection(db, 'users')); s.forEach(d => { const v = d.data(); if (v.date === today()) rows.push({ id: d.id, ...v }); }); }
+  else rows = [{ id: 'x', name: cfg.name || 'Εσύ', score: Math.round(Math.min(sum('protein') / cfg.protein, 1) * 100) }];
+  rows.sort((a, b) => b.score - a.score);
+  $('board').innerHTML = rows.map((r, i) => `<div class="fr ${r.id === me || !user ? 'me' : ''}"><span class="rk">${i + 1}</span><div class="av">${(r.name || '?')[0]}</div><div style="flex:1"><b>${r.name}</b><div class="tr"><i style="width:${r.score}%"></i></div></div><b>${r.score}%</b></div>`).join('') + (user ? '' : '<p class="sub tiny">Συνδέσου για να δεις φίλους.</p>');
+}
+function renderAll() {
+  renderGauge(); renderProtein(); renderBank(); renderWater(); renderMeals();
+  $('hello').textContent = 'Γεια σου' + (cfg.name ? ', ' + cfg.name : '');
+  $('date').textContent = new Date().toLocaleDateString('el-GR', { weekday: 'long', day: 'numeric', month: 'long' });
+  let s = 0; for (const k of Object.keys(days).sort().reverse()) { if (days[k].meals.length) s++; else if (k !== today()) break; } $('streak').textContent = s;
 }
 
-function mealHTML(m, i, isNew) {
-  return `<article class="meal ${isNew ? 'new' : ''}">
-    <div class="thumb">${m.icon}</div>
-    <div class="info"><div class="name">${m.name}</div>
-      <div class="sub">${m.time} • Π ${m.p}g • Υ ${m.c}g • Λ ${m.f}g${m.salty ? ' • 🧂 αλμυρό' : ''}</div></div>
-    <div class="kcal">${m.kcal}<div class="sub">kcal</div></div>
-    <label class="dig">Χώνεψη
-      <input type="range" min="1" max="5" value="${m.dig}" data-i="${i}" class="slider digSlider">
-      <b id="digv${i}">${m.dig}/5</b></label>
-    ${m.warn ? `<div class="warn">⚠️ ${m.warn}</div>` : ''}
-  </article>`;
+// ===== GEMINI =====
+async function analyze(text) {
+  if (!WORKER_URL) throw new Error('Λείπει το WORKER_URL στο app.js.');
+  if (!user) throw new Error('Συνδέσου με Google από τις Ρυθμίσεις για να δουλέψει το AI.');
+  const token = await user.getIdToken();
+  const heavy = Object.values(days).flatMap(d => d.meals).filter(m => m.dig >= 4).map(m => m.name);
+  const prompt = `Είσαι διατροφολόγος. Ανάλυσε το γεύμα: "${text}". Επίστρεψε ΜΟΝΟ JSON με πεδία: name (σύντομος ελληνικός τίτλος), kcal, protein, carbs, fat (αριθμοί, συνολικά για όλη την ποσότητα), salty (boolean: πολύ αλάτι), imageQuery (2-3 αγγλικές λέξεις για αναζήτηση φωτογραφίας), warning (string στα ελληνικά ή null). Για το warning: αν το γεύμα μοιάζει με κάποιο από αυτά που ο χρήστης βρήκε βαρύ [${heavy.join('; ')}], γράψε σύντομη προειδοποίηση, αλλιώς null.`;
+  const r = await fetch(WORKER_URL + '/gemini', {
+    method: 'POST', headers: { 'Content-Type': 'application/json', Authorization: 'Bearer ' + token },
+    body: JSON.stringify({ contents: [{ parts: [{ text: prompt }] }], generationConfig: { responseMimeType: 'application/json' } }) });
+  if (!r.ok) throw new Error('Σφάλμα AI (' + r.status + '). Έλεγξε το Worker και τα secrets του.');
+  const j = await r.json();
+  return JSON.parse(j.candidates[0].content.parts[0].text.replace(/```json|```/g, ''));
 }
-function renderMeals(newFirst) {
-  $('meals').innerHTML = state.meals.map((m, i) => mealHTML(m, i, newFirst && i === 0)).join('');
-  document.querySelectorAll('.digSlider').forEach(s => s.oninput = () => {
-    state.meals[s.dataset.i].dig = +s.value; $('digv' + s.dataset.i).textContent = s.value + '/5';
-  });
+async function fetchImage(q) {
+  if (!q || !user) return '';
+  try { const r = await fetch(`${WORKER_URL}/unsplash?query=${encodeURIComponent(q)}`, { headers: { Authorization: 'Bearer ' + await user.getIdToken() } }); return (await r.json()).results[0].urls.small; } catch { return ''; }
 }
-
-function renderBoard() {
-  $('board').innerHTML = state.friends.map((f, i) => `
-    <div class="friend ${f.me ? 'me' : ''}" style="--c:${f.c}">
-      <div class="rank">${['🥇', '🥈', '🥉'][i] || i + 1}</div>
-      <div class="av">${f.n[0]}</div>
-      <div class="flex-1"><div class="font-semibold">${f.n}</div>
-        <div class="bar"><i style="width:${f.s}%"></i></div></div>
-      <b class="font-display text-lg">${f.s}%</b></div>`).join('');
-}
-
-function renderAll() { renderProtein(); renderKcal(); renderBank(); renderWater(); renderMeals(); renderBoard(); }
-
-// ===== AI LOGGER (προσομοίωση, το Gemini μπαίνει στο βήμα 2) =====
 async function logMeal() {
-  const text = $('logInput').value.trim();
-  if (!text) { $('logStatus').textContent = 'Γράψε πρώτα τι έφαγες ή ήπιες.'; return; }
+  const text = $('logInput').value.trim(); if (!text) return;
   $('logBtn').classList.add('busy'); $('logStatus').textContent = 'Το AI αναλύει το γεύμα...';
-  await new Promise(r => setTimeout(r, 1200));
-  const kcal = 250 + Math.floor(Math.random() * 350);
-  state.meals.unshift({ icon: '🍽️', name: text, time: new Date().toLocaleTimeString('el-GR', { hour: '2-digit', minute: '2-digit' }),
-    kcal, p: Math.round(kcal * .08), c: Math.round(kcal * .1), f: Math.round(kcal * .03), salty: /γύρο|τηγαν|πίτσα|burger/i.test(text), dig: 3 });
-  $('logInput').value = ''; $('logBtn').classList.remove('busy');
-  $('logStatus').textContent = 'Καταχωρήθηκε (δοκιμαστικές τιμές). Οι πραγματικές θα έρθουν με το Gemini.';
-  renderAll(); renderMeals(true);
+  try {
+    const a = await analyze(text), img = await fetchImage(a.imageQuery);
+    day().meals.unshift({ name: a.name, kcal: +a.kcal || 0, protein: +a.protein || 0, carbs: +a.carbs || 0, fat: +a.fat || 0, salty: !!a.salty, warning: a.warning || null, img, dig: 0,
+      time: new Date().toLocaleTimeString('el-GR', { hour: '2-digit', minute: '2-digit' }) });
+    await save(); $('logInput').value = ''; $('sheet').classList.remove('on'); renderAll(); renderMeals(true); show('meals');
+  } catch (e) { $('logStatus').textContent = e.message; }
+  $('logBtn').classList.remove('busy');
 }
 
-// ===== EVENTS =====
-$('date').textContent = new Date().toLocaleDateString('el-GR', { weekday: 'long', day: 'numeric', month: 'long' });
-$('logBtn').onclick = logMeal;
-$('logInput').onkeydown = e => e.key === 'Enter' && logMeal();
-$('addWater').onclick = () => { state.water += 0.25; renderWater(); };
-$('workoutBtn').onclick = e => { state.workout = !state.workout; e.currentTarget.classList.toggle('on', state.workout); renderWater(); };
-$('lockRange').oninput = e => { state.lock = +e.target.value; renderLock(); };
-document.querySelectorAll('.tabbar button').forEach(b => b.onclick = () => {
-  document.querySelectorAll('.tabbar button').forEach(x => x.classList.toggle('on', x === b));
-  document.querySelectorAll('.tab').forEach(t => t.classList.toggle('hidden', t.id !== 'tab-' + b.dataset.tab));
+// ===== ΠΛΟΗΓΗΣΗ & EVENTS =====
+function show(v) {
+  qa('.view').forEach(x => x.classList.toggle('on', x.id === 'v-' + v));
+  qa('nav [data-v]').forEach(b => b.classList.toggle('on', b.dataset.v === v));
+  if (v === 'friends') renderBoard();
+}
+qa('nav [data-v]').forEach(b => b.onclick = () => show(b.dataset.v));
+$('aiBtn').onclick = () => { $('sheet').classList.add('on'); $('logInput').focus(); };
+$('closeSheet').onclick = () => $('sheet').classList.remove('on');
+$('logBtn').onclick = logMeal; $('logInput').onkeydown = e => e.key === 'Enter' && logMeal();
+$('addWater').onclick = () => { day().water += .25; save(); renderWater(); };
+$('workoutBtn').onclick = () => { day().workout = !day().workout; save(); renderWater(); };
+$('lockRange').oninput = e => { day().lock = +e.target.value; renderBank(); }; $('lockRange').onchange = save;
+
+function fillSettings() { $('sKcal').value = cfg.kcal; $('sPro').value = cfg.protein; $('sWater').value = cfg.water; }
+$('saveSettings').onclick = () => {
+  Object.assign(cfg, { kcal: +$('sKcal').value, protein: +$('sPro').value, water: +$('sWater').value });
+  LS('fuel_cfg', cfg); save(); renderAll(); $('setMsg').textContent = 'Αποθηκεύτηκε.';
+};
+$('authBtn').onclick = async () => {
+  if (!cloudOn) { $('setMsg').textContent = 'Δεν έχεις βάλει ακόμα firebaseConfig στο app.js.'; return; }
+  user ? await signOut(auth) : await signInWithPopup(auth, new GoogleAuthProvider());
+};
+if (cloudOn) onAuthStateChanged(auth, async u => {
+  user = u; $('authBtn').textContent = u ? 'Αποσύνδεση (' + (u.displayName || '') + ')' : 'Σύνδεση με Google';
+  if (u) { cfg.name = cfg.name || (u.displayName || '').split(' ')[0]; await loadCloud(); await save(); }
+  renderAll();
 });
 
-renderAll();
+fillSettings(); renderAll();

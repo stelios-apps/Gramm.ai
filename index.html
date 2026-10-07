@@ -3,126 +3,102 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-<meta name="theme-color" content="#0a0b16">
-<title>FuelUp – Διατροφή & Fitness</title>
-<link rel="preconnect" href="https://fonts.googleapis.com">
-<link href="https://fonts.googleapis.com/css2?family=Outfit:wght@500;700;800&family=Manrope:wght@400;500;600;700&display=swap" rel="stylesheet">
+<meta name="theme-color" content="#f6f1e8">
+<title>FuelUp</title>
+<link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:wght@600;800&family=DM+Sans:wght@400;500;700&display=swap" rel="stylesheet">
 <script src="https://cdn.tailwindcss.com"></script>
 <link rel="stylesheet" href="style.css">
 </head>
 <body>
-<div class="aurora"></div>
-<main class="app">
+<svg width="0" height="0" style="position:absolute"><defs>
+<symbol id="i-home" viewBox="0 0 24 24"><path d="M3 11l9-8 9 8v9a1 1 0 0 1-1 1h-5v-6H9v6H4a1 1 0 0 1-1-1z"/></symbol>
+<symbol id="i-list" viewBox="0 0 24 24"><path d="M8 6h13M8 12h13M8 18h13M3 6h.01M3 12h.01M3 18h.01"/></symbol>
+<symbol id="i-spark" viewBox="0 0 24 24"><path d="M12 3l1.8 5.2L19 10l-5.2 1.8L12 17l-1.8-5.2L5 10l5.2-1.8zM19 16l.8 2.2L22 19l-2.2.8L19 22l-.8-2.2L16 19l2.2-.8z"/></symbol>
+<symbol id="i-users" viewBox="0 0 24 24"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2M9 11a4 4 0 1 0 0-8 4 4 0 0 0 0 8M22 21v-2a4 4 0 0 0-3-3.9M16 3.1a4 4 0 0 1 0 7.8"/></symbol>
+<symbol id="i-gear" viewBox="0 0 24 24"><circle cx="12" cy="12" r="4"/><path d="M12 2v3M12 19v3M2 12h3M19 12h3M4.9 4.9L7 7M17 17l2.1 2.1M4.9 19.1L7 17M17 7l2.1-2.1"/></symbol>
+<symbol id="i-drop" viewBox="0 0 24 24"><path d="M12 3s6 6.5 6 11a6 6 0 0 1-12 0c0-4.5 6-11 6-11z"/></symbol>
+<symbol id="i-bolt" viewBox="0 0 24 24"><path d="M13 2L4 14h7l-1 8 9-12h-7z"/></symbol>
+<symbol id="i-lock" viewBox="0 0 24 24"><rect x="5" y="11" width="14" height="10" rx="2"/><path d="M8 11V7a4 4 0 0 1 8 0v4"/></symbol>
+<symbol id="i-bank" viewBox="0 0 24 24"><path d="M3 10l9-6 9 6M5 10v8M9 10v8M15 10v8M19 10v8M3 21h18"/></symbol>
+<symbol id="i-send" viewBox="0 0 24 24"><path d="M22 2L11 13M22 2l-7 20-4-9-9-4z"/></symbol>
+<symbol id="i-alert" viewBox="0 0 24 24"><path d="M12 3l10 18H2zM12 10v5M12 18h.01"/></symbol>
+<symbol id="i-dumb" viewBox="0 0 24 24"><path d="M6 8v8M3 10v4M18 8v8M21 10v4M6 12h12"/></symbol>
+<symbol id="i-plus" viewBox="0 0 24 24"><path d="M12 5v14M5 12h14"/></symbol>
+<symbol id="i-close" viewBox="0 0 24 24"><path d="M6 6l12 12M18 6L6 18"/></symbol>
+<symbol id="i-fork" viewBox="0 0 24 24"><path d="M7 3v7a2 2 0 0 0 4 0V3M9 10v11M17 3c-2 2-3 5-3 8h3v10"/></symbol>
+<symbol id="i-flame" viewBox="0 0 24 24"><path d="M12 2c1 4 5 5 5 10a5 5 0 0 1-10 0c0-2 1-3 2-4 0 2 1 3 2 3 0-4 0-6 1-9z"/></symbol>
+</defs></svg>
 
-  <header class="flex items-center justify-between">
-    <div>
-      <p class="muted text-sm" id="date"></p>
-      <h1 class="font-display text-2xl font-extrabold">Γεια σου, Νίκο 👋</h1>
-    </div>
-    <div class="streak">🔥 <b id="streak">6</b> μέρες</div>
+<div class="phone">
+  <header>
+    <div><p id="date" class="sub"></p><h1 id="hello">Γεια σου</h1></div>
+    <div class="flame"><svg class="i"><use href="#i-flame"/></svg><b id="streak">0</b></div>
   </header>
 
-  <!-- TAB: ΣΗΜΕΡΑ -->
-  <section id="tab-today" class="tab space-y-4">
-
-    <!-- AI Logger -->
-    <div class="card logger">
-      <div class="flex gap-2">
-        <input id="logInput" class="input" placeholder='π.χ. "Έφαγα 2 τυλιχτά μπιφτέκι χωρίς πατάτες"' autocomplete="off">
-        <button id="logBtn" class="btn-glow" aria-label="Καταχώρηση">✨</button>
+  <main>
+    <!-- ΑΡΧΙΚΗ -->
+    <section id="v-home" class="view on">
+      <div class="gauge">
+        <svg id="arc" viewBox="0 0 300 230"></svg>
+        <div class="gauge-c"><span class="sub">Σήμερα</span><b id="kcalEaten">0</b><span class="goalTxt">στόχος <span id="kcalGoal"></span> kcal</span></div>
       </div>
-      <p id="logStatus" class="muted text-xs mt-2">Γράψε ελεύθερα τι έφαγες. Το AI υπολογίζει θερμίδες και μακροθρεπτικά.</p>
-    </div>
-
-    <!-- Protein (hero) -->
-    <div class="card protein">
-      <div class="ring-wrap">
-        <svg viewBox="0 0 200 200" class="ring">
-          <circle cx="100" cy="100" r="86" class="ring-bg"/>
-          <circle id="proteinArc" cx="100" cy="100" r="86" class="ring-fg"/>
-        </svg>
-        <div class="ring-center">
-          <span id="proteinVal" class="font-display text-5xl font-extrabold">0</span>
-          <span class="muted text-sm">από 170 g πρωτεΐνη</span>
+      <div class="card">
+        <div class="row"><span class="lbl"><svg class="i"><use href="#i-bolt"/></svg>Πρωτεΐνη</span><b><span id="pVal">0</span> / <span id="pGoal"></span> g</b></div>
+        <div id="pBar" class="pills"></div>
+      </div>
+      <div class="duo">
+        <div class="card bank">
+          <span class="lbl"><svg class="i"><use href="#i-bank"/></svg>Cheat Bank</span>
+          <b class="big"><span id="bankTotal">0</span><small> kcal</small></b>
+          <div id="bankDays" class="mini"></div>
+          <label class="lock"><svg class="i"><use href="#i-lock"/></svg><input id="lockRange" type="range" min="0" max="1200" step="50"><b id="lockVal"></b></label>
+          <p id="lockMsg" class="sub tiny"></p>
+        </div>
+        <div class="card water">
+          <span class="lbl"><svg class="i"><use href="#i-drop"/></svg>Νερό</span>
+          <b class="big"><span id="waterVal">0</span><small> / <span id="waterGoal"></span> L</small></b>
+          <div class="tank"><i id="waterFill"></i></div>
+          <div class="btns"><button id="addWater" class="mini-btn">+250ml</button><button id="workoutBtn" class="mini-btn" aria-label="Προπόνηση"><svg class="i"><use href="#i-dumb"/></svg></button></div>
+          <p id="waterNote" class="sub tiny"></p>
         </div>
       </div>
-      <p id="proteinMsg" class="text-center font-semibold mt-3"></p>
-    </div>
+    </section>
 
-    <!-- Calories + macros -->
-    <div class="card">
-      <div class="flex items-end justify-between">
-        <div>
-          <p class="muted text-sm">Θερμίδες σήμερα</p>
-          <p class="font-display text-3xl font-extrabold"><span id="kcalEaten">0</span><span class="muted text-base font-semibold"> / <span id="kcalGoal">2000</span> kcal</span></p>
-        </div>
-        <p class="text-right text-sm"><b id="kcalLeft" class="text-cyan-300"></b><br><span class="muted">απομένουν</span></p>
+    <!-- ΓΕΥΜΑΤΑ -->
+    <section id="v-meals" class="view"><h2>Γεύματα σήμερα</h2><div id="meals" class="list"></div></section>
+
+    <!-- ΦΙΛΟΙ -->
+    <section id="v-friends" class="view"><h2>Leaderboard σήμερα</h2><div id="board" class="list"></div><p class="sub tiny">Σκορ = πρόοδος πρωτεΐνης. Φαίνονται οι χρήστες που έχουν καταχωρήσει σήμερα.</p></section>
+
+    <!-- ΡΥΘΜΙΣΕΙΣ -->
+    <section id="v-settings" class="view">
+      <h2>Ρυθμίσεις</h2>
+      <div class="card form">
+        <button id="authBtn" class="btn dark">Σύνδεση με Google</button>
+        <div class="grid3"><label>Kcal<input id="sKcal" type="number"></label><label>Πρωτεΐνη g<input id="sPro" type="number"></label><label>Νερό L<input id="sWater" type="number" step="0.1"></label></div>
+        <button id="saveSettings" class="btn">Αποθήκευση</button>
+        <p id="setMsg" class="sub tiny"></p>
       </div>
-      <div class="bar mt-3"><i id="kcalBar" class="bg-kcal"></i></div>
-      <div class="grid grid-cols-3 gap-3 mt-4 text-center text-sm">
-        <div class="macro"><span class="dot" style="--c:#fb7185"></span>Υδατ.<b id="mCarb"></b></div>
-        <div class="macro"><span class="dot" style="--c:#fbbf24"></span>Λιπαρά<b id="mFat"></b></div>
-        <div class="macro"><span class="dot" style="--c:#22d3ee"></span>Πρωτ.<b id="mPro"></b></div>
-      </div>
+    </section>
+  </main>
+
+  <!-- Logger sheet -->
+  <div id="sheet" class="sheet">
+    <div class="sheet-in">
+      <div class="row"><b>Τι έφαγες ή ήπιες;</b><button id="closeSheet" class="x" aria-label="Κλείσιμο"><svg class="i"><use href="#i-close"/></svg></button></div>
+      <div class="inrow"><input id="logInput" placeholder="π.χ. 250ml Alpro dark chocolate" autocomplete="off"><button id="logBtn" class="send" aria-label="Αποστολή"><svg class="i"><use href="#i-send"/></svg></button></div>
+      <p id="logStatus" class="sub tiny">Το AI υπολογίζει θερμίδες, μακροθρεπτικά και βρίσκει φωτογραφία.</p>
     </div>
+  </div>
 
-    <!-- Cheat Meal Bank -->
-    <div class="card vault">
-      <div class="flex items-center justify-between">
-        <div>
-          <p class="text-amber-200/80 text-sm font-semibold">Cheat Meal Bank</p>
-          <p class="font-display text-4xl font-extrabold gold"><span id="bankTotal">0</span> <span class="text-lg">kcal</span></p>
-          <p class="muted text-xs">αποταμιευμένες για το Σάββατο</p>
-        </div>
-        <div class="coin">🏦</div>
-      </div>
-      <div id="bankDays" class="flex items-end justify-between gap-1.5 h-20 mt-4"></div>
-
-      <div class="reverse mt-4">
-        <div class="flex justify-between text-sm">
-          <span class="font-semibold">🔒 Κλείδωμα για το βράδυ</span>
-          <b id="lockVal" class="text-amber-300"></b>
-        </div>
-        <input id="lockRange" type="range" min="0" max="1200" step="50" value="600" class="slider gold-slider">
-        <p id="lockMsg" class="muted text-xs"></p>
-      </div>
-    </div>
-
-    <!-- Hydration -->
-    <div class="card hydro">
-      <div class="flex items-center justify-between">
-        <div>
-          <p class="muted text-sm">Νερό</p>
-          <p class="font-display text-3xl font-extrabold"><span id="waterVal">0</span><span class="muted text-base font-semibold"> / <span id="waterGoal"></span> L</span></p>
-        </div>
-        <button id="workoutBtn" class="chip">🏋️ Προπόνηση</button>
-      </div>
-      <div class="bar mt-3"><i id="waterBar" class="bg-water"></i></div>
-      <p id="waterNote" class="muted text-xs mt-2"></p>
-      <button id="addWater" class="btn-ghost mt-3">+ 250 ml</button>
-    </div>
-
-    <!-- Meals -->
-    <div>
-      <h2 class="font-display text-lg font-bold mb-2">Γεύματα σήμερα</h2>
-      <div id="meals" class="space-y-3"></div>
-    </div>
-  </section>
-
-  <!-- TAB: ΦΙΛΟΙ -->
-  <section id="tab-friends" class="tab hidden space-y-3">
-    <h2 class="font-display text-lg font-bold">Leaderboard φίλων</h2>
-    <div id="board" class="space-y-3"></div>
-    <p class="muted text-xs">Δείγμα δεδομένων. Θα συνδεθεί με το Firebase στο επόμενο βήμα.</p>
-  </section>
-
-</main>
-
-<nav class="tabbar">
-  <button data-tab="today" class="on">📊<span>Σήμερα</span></button>
-  <button data-tab="friends">🏆<span>Φίλοι</span></button>
-</nav>
-
+  <nav>
+    <button data-v="home" class="on" aria-label="Αρχική"><svg class="i"><use href="#i-home"/></svg></button>
+    <button data-v="meals" aria-label="Γεύματα"><svg class="i"><use href="#i-list"/></svg></button>
+    <button id="aiBtn" class="center" aria-label="Νέα καταγραφή"><svg class="i"><use href="#i-spark"/></svg></button>
+    <button data-v="friends" aria-label="Φίλοι"><svg class="i"><use href="#i-users"/></svg></button>
+    <button data-v="settings" aria-label="Ρυθμίσεις"><svg class="i"><use href="#i-gear"/></svg></button>
+  </nav>
+</div>
 <script type="module" src="app.js"></script>
 </body>
 </html>
