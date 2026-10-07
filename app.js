@@ -93,7 +93,7 @@ function renderMeals(fresh) {
   $('meals').innerHTML = ms.length ? ms.map((m, i) => `
   <article class="meal ${fresh && i === 0 ? 'new' : ''}">
     <div class="thumb" style="${m.img ? `background-image:url('${m.img}')` : ''}">${m.img ? '' : ic('fork')}</div>
-    <div><b class="n">${m.name}</b><div class="macros">${m.time} • Π ${m.protein}g • Υ ${m.carbs}g • Λ ${m.fat}g</div></div>
+    <div><b class="n">${m.name}</b><div class="macros">${m.slot ? m.slot + ' • ' : ''}${m.time} • Π ${m.protein}g • Υ ${m.carbs}g • Λ ${m.fat}g</div></div>
     <div class="k">${fmt(m.kcal)}<div class="macros">kcal</div><button class="ib" data-e="${i}" aria-label="Διόρθωση">${ic('pencil')}</button></div>
     <div class="dig">Χώνεψη <span>${[1, 2, 3, 4, 5].map(n => `<button data-i="${i}" data-n="${n}" class="${m.dig === n ? 'on' : ''}">${n}</button>`).join('')}</span></div>
     ${m.warning ? `<div class="warn">${ic('alert')}${m.warning}</div>` : ''}
@@ -202,3 +202,5 @@ onAuthStateChanged(auth, async u => {
 });
 ['gesturestart', 'gesturechange', 'gestureend'].forEach(ev => document.addEventListener(ev, e => e.preventDefault()));
 renderAll();
+window.FU = { get cfg() { return cfg; }, get days() { return days; }, day, save, renderAll, gemini, G, sum, show, today };
+import('./extras.js?v=1');
