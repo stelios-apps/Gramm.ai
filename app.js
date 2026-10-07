@@ -119,7 +119,7 @@ async function analyze(text) {
   const r = await fetch(WORKER_URL + '/gemini', {
     method: 'POST', headers: { 'Content-Type': 'application/json', Authorization: 'Bearer ' + token },
     body: JSON.stringify({ contents: [{ parts: [{ text: prompt }] }], generationConfig: { responseMimeType: 'application/json' } }) });
-  if (!r.ok) throw new Error('Σφάλμα AI (' + r.status + '). Έλεγξε το Worker και τα secrets του.');
+  if (!r.ok) { const t = await r.text().catch(() => ''); throw new Error('Σφάλμα AI (' + r.status + '): ' + t.slice(0, 180)); }
   const j = await r.json();
   return JSON.parse(j.candidates[0].content.parts[0].text.replace(/```json|```/g, ''));
 }
