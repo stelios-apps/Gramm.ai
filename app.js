@@ -149,7 +149,7 @@ async function logMeal(photo) {
     const prompt = `Είσαι διατροφολόγος. ${photo ? 'Ανάλυσε το φαγητό της φωτογραφίας και εκτίμησε ποσότητες.' : ''} ${text ? `Περιγραφή χρήστη: "${text}".` : ''} Επίστρεψε ΜΟΝΟ JSON με πεδία: name (σύντομος ελληνικός τίτλος), kcal, protein, carbs, fat (αριθμοί, συνολικά για όλη την ποσότητα), salty (boolean: πολύ αλάτι), imageQuery (2-3 αγγλικές λέξεις), warning (ελληνικά ή null). Για το warning: αν μοιάζει με κάτι που ο χρήστης βρήκε βαρύ [${heavy.join('; ')}] γράψε σύντομη προειδοποίηση, αλλιώς null.`;
     const a = await gemini([...(photo ? [{ inline_data: { mime_type: 'image/jpeg', data: photo.b64 } }] : []), { text: prompt }]);
     const img = photo ? photo.thumb : await fetchImage(a.imageQuery);
-    day().meals.unshift({ name: a.name, kcal: +a.kcal || 0, protein: +a.protein || 0, carbs: +a.carbs || 0, fat: +a.fat || 0, salty: !!a.salty, warning: a.warning || null, img, dig: 0, time: new Date().toLocaleTimeString('el-GR', { hour: '2-digit', minute: '2-digit' }) });
+    day().meals.unshift({ name: a.name, kcal: +a.kcal || 0, protein: +a.protein || 0, carbs: +a.carbs || 0, fat: +a.fat || 0, salty: !!a.salty, warning: a.warning || null, img, dig: 0, slot: ($('logSlot')||{}).value||'', time: new Date().toLocaleTimeString('el-GR', { hour: '2-digit', minute: '2-digit' }) });
     await save(); $('logInput').value = ''; $('sheet').classList.remove('on'); renderAll(); renderMeals(true); show('meals');
   } catch (e) { $('logStatus').textContent = netErr(e); }
   $('logBtn').classList.remove('busy');
