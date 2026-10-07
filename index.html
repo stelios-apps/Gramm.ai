@@ -1,0 +1,128 @@
+<!DOCTYPE html>
+<html lang="el">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#0a0b16">
+<title>FuelUp – Διατροφή & Fitness</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Outfit:wght@500;700;800&family=Manrope:wght@400;500;600;700&display=swap" rel="stylesheet">
+<script src="https://cdn.tailwindcss.com"></script>
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+<div class="aurora"></div>
+<main class="app">
+
+  <header class="flex items-center justify-between">
+    <div>
+      <p class="muted text-sm" id="date"></p>
+      <h1 class="font-display text-2xl font-extrabold">Γεια σου, Νίκο 👋</h1>
+    </div>
+    <div class="streak">🔥 <b id="streak">6</b> μέρες</div>
+  </header>
+
+  <!-- TAB: ΣΗΜΕΡΑ -->
+  <section id="tab-today" class="tab space-y-4">
+
+    <!-- AI Logger -->
+    <div class="card logger">
+      <div class="flex gap-2">
+        <input id="logInput" class="input" placeholder='π.χ. "Έφαγα 2 τυλιχτά μπιφτέκι χωρίς πατάτες"' autocomplete="off">
+        <button id="logBtn" class="btn-glow" aria-label="Καταχώρηση">✨</button>
+      </div>
+      <p id="logStatus" class="muted text-xs mt-2">Γράψε ελεύθερα τι έφαγες. Το AI υπολογίζει θερμίδες και μακροθρεπτικά.</p>
+    </div>
+
+    <!-- Protein (hero) -->
+    <div class="card protein">
+      <div class="ring-wrap">
+        <svg viewBox="0 0 200 200" class="ring">
+          <circle cx="100" cy="100" r="86" class="ring-bg"/>
+          <circle id="proteinArc" cx="100" cy="100" r="86" class="ring-fg"/>
+        </svg>
+        <div class="ring-center">
+          <span id="proteinVal" class="font-display text-5xl font-extrabold">0</span>
+          <span class="muted text-sm">από 170 g πρωτεΐνη</span>
+        </div>
+      </div>
+      <p id="proteinMsg" class="text-center font-semibold mt-3"></p>
+    </div>
+
+    <!-- Calories + macros -->
+    <div class="card">
+      <div class="flex items-end justify-between">
+        <div>
+          <p class="muted text-sm">Θερμίδες σήμερα</p>
+          <p class="font-display text-3xl font-extrabold"><span id="kcalEaten">0</span><span class="muted text-base font-semibold"> / <span id="kcalGoal">2000</span> kcal</span></p>
+        </div>
+        <p class="text-right text-sm"><b id="kcalLeft" class="text-cyan-300"></b><br><span class="muted">απομένουν</span></p>
+      </div>
+      <div class="bar mt-3"><i id="kcalBar" class="bg-kcal"></i></div>
+      <div class="grid grid-cols-3 gap-3 mt-4 text-center text-sm">
+        <div class="macro"><span class="dot" style="--c:#fb7185"></span>Υδατ.<b id="mCarb"></b></div>
+        <div class="macro"><span class="dot" style="--c:#fbbf24"></span>Λιπαρά<b id="mFat"></b></div>
+        <div class="macro"><span class="dot" style="--c:#22d3ee"></span>Πρωτ.<b id="mPro"></b></div>
+      </div>
+    </div>
+
+    <!-- Cheat Meal Bank -->
+    <div class="card vault">
+      <div class="flex items-center justify-between">
+        <div>
+          <p class="text-amber-200/80 text-sm font-semibold">Cheat Meal Bank</p>
+          <p class="font-display text-4xl font-extrabold gold"><span id="bankTotal">0</span> <span class="text-lg">kcal</span></p>
+          <p class="muted text-xs">αποταμιευμένες για το Σάββατο</p>
+        </div>
+        <div class="coin">🏦</div>
+      </div>
+      <div id="bankDays" class="flex items-end justify-between gap-1.5 h-20 mt-4"></div>
+
+      <div class="reverse mt-4">
+        <div class="flex justify-between text-sm">
+          <span class="font-semibold">🔒 Κλείδωμα για το βράδυ</span>
+          <b id="lockVal" class="text-amber-300"></b>
+        </div>
+        <input id="lockRange" type="range" min="0" max="1200" step="50" value="600" class="slider gold-slider">
+        <p id="lockMsg" class="muted text-xs"></p>
+      </div>
+    </div>
+
+    <!-- Hydration -->
+    <div class="card hydro">
+      <div class="flex items-center justify-between">
+        <div>
+          <p class="muted text-sm">Νερό</p>
+          <p class="font-display text-3xl font-extrabold"><span id="waterVal">0</span><span class="muted text-base font-semibold"> / <span id="waterGoal"></span> L</span></p>
+        </div>
+        <button id="workoutBtn" class="chip">🏋️ Προπόνηση</button>
+      </div>
+      <div class="bar mt-3"><i id="waterBar" class="bg-water"></i></div>
+      <p id="waterNote" class="muted text-xs mt-2"></p>
+      <button id="addWater" class="btn-ghost mt-3">+ 250 ml</button>
+    </div>
+
+    <!-- Meals -->
+    <div>
+      <h2 class="font-display text-lg font-bold mb-2">Γεύματα σήμερα</h2>
+      <div id="meals" class="space-y-3"></div>
+    </div>
+  </section>
+
+  <!-- TAB: ΦΙΛΟΙ -->
+  <section id="tab-friends" class="tab hidden space-y-3">
+    <h2 class="font-display text-lg font-bold">Leaderboard φίλων</h2>
+    <div id="board" class="space-y-3"></div>
+    <p class="muted text-xs">Δείγμα δεδομένων. Θα συνδεθεί με το Firebase στο επόμενο βήμα.</p>
+  </section>
+
+</main>
+
+<nav class="tabbar">
+  <button data-tab="today" class="on">📊<span>Σήμερα</span></button>
+  <button data-tab="friends">🏆<span>Φίλοι</span></button>
+</nav>
+
+<script type="module" src="app.js"></script>
+</body>
+</html>
