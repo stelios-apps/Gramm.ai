@@ -4,7 +4,7 @@ import { getFirestore, doc, setDoc, getDocs, collection } from "https://www.gsta
 
 // ===== ΡΥΘΜΙΣΕΙΣ: βάλε εδώ το firebaseConfig σου (Βήμα Β στις οδηγίες) =====
 const firebaseConfig = { apiKey: "", authDomain: "", projectId: "", appId: "" };
-const WORKER_URL = ""; // το URL του Cloudflare Worker, π.χ. "https://fuelup.ONOMA.workers.dev"
+const WORKER_URL = "https://gramm.stelios-andritsakis.workers.dev"; // το URL του Cloudflare Worker, π.χ. "https://fuelup.ONOMA.workers.dev"
 
 const $ = id => document.getElementById(id), qa = s => document.querySelectorAll(s);
 const ic = n => `<svg class="i"><use href="#i-${n}"/></svg>`;
