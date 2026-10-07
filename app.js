@@ -146,7 +146,8 @@ function show(v) {
   if (v === 'friends') renderBoard();
 }
 qa('nav [data-v]').forEach(b => b.onclick = () => show(b.dataset.v));
-$('aiBtn').onclick = () => { $('sheet').classList.add('on'); $('logInput').focus(); };
+$('aiBtn').onclick = () => { $('sheet').classList.add('on'); setTimeout(() => $('logInput').focus(), 200); };
+$('sheet').onclick = e => { if (e.target === $('sheet')) $('sheet').classList.remove('on'); };
 $('closeSheet').onclick = () => $('sheet').classList.remove('on');
 $('logBtn').onclick = logMeal; $('logInput').onkeydown = e => e.key === 'Enter' && logMeal();
 $('addWater').onclick = () => { day().water += .25; save(); renderWater(); };
