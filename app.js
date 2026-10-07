@@ -3,8 +3,15 @@ import { getAuth, GoogleAuthProvider, signInWithPopup, signOut, onAuthStateChang
 import { getFirestore, doc, setDoc, getDocs, collection } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
 
 // ===== ΡΥΘΜΙΣΕΙΣ: βάλε εδώ το firebaseConfig σου (Βήμα Β στις οδηγίες) =====
-const firebaseConfig = { apiKey: "AIzaSyAch8LqPh78C4o7Edh8vuyHqfy4CdyibXE", authDomain: "gramm-1fb0a.firebaseapp.com", projectId: "gramm-1fb0a", appId: "1:164591062110:web:0ac91ae41d21b8e7d0b8cf" };
-const WORKER_URL = "https://gramm.stelios-andritsakis.workers.dev"; // το URL του Cloudflare Worker, π.χ. "https://fuelup.ONOMA.workers.dev"
+const firebaseConfig = {
+  apiKey: "AIzaSyAch8LqPh78C4o7Edh8vuyHqfy4CdyibXE",
+  authDomain: "gramm-1fb0a.firebaseapp.com",
+  projectId: "gramm-1fb0a",
+  storageBucket: "gramm-1fb0a.firebasestorage.app",
+  messagingSenderId: "164591062110",
+  appId: "1:164591062110:web:0ac91ae41d21b8e7d0b8cf"
+};
+const WORKER_URL = "https://gramm.stelios-andritsakis.workers.dev";
 
 const $ = id => document.getElementById(id), qa = s => document.querySelectorAll(s);
 const ic = n => `<svg class="i"><use href="#i-${n}"/></svg>`;
