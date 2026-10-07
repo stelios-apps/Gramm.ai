@@ -96,3 +96,23 @@ nav button.on{color:var(--or);filter:drop-shadow(0 0 8px rgba(255,138,76,.8))}
 nav .center{width:62px;height:56px;border-radius:20px;background:var(--or);color:#fff;box-shadow:0 0 24px rgba(255,138,76,.75);animation:breath 3s ease-in-out infinite}
 @keyframes breath{50%{box-shadow:0 0 34px rgba(255,138,76,1)}}
 @media (prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}
+
+/* ===== v4: no zoom / no sideways scroll, new components ===== */
+html,body{touch-action:pan-y;overscroll-behavior:none;overflow-x:hidden;max-width:100vw;position:fixed;width:100%}
+.view{overflow-x:hidden}
+input[type=range]{touch-action:none}
+.grid2,.grid3,.grid4{display:grid;gap:8px;min-width:0}.grid2{grid-template-columns:1fr 1fr}.grid3{grid-template-columns:repeat(3,1fr)}.grid4{grid-template-columns:repeat(4,1fr)}
+.grid2>*,.grid3>*,.grid4>*{min-width:0}
+input:not([type=range]),select{width:100%}
+select{background:var(--bg);border:2px solid transparent;border-radius:14px;padding:12px;font:inherit;font-size:16px;color:var(--ink);outline:none;-webkit-appearance:none;appearance:none}
+select:focus{border-color:var(--or)}
+.sheet-in input:not([type=range]){width:auto;flex:1}.sheet-in>input{width:100%}
+.strip{border:0;width:100%;text-align:left;font:inherit;color:var(--ink);cursor:pointer;padding:10px 14px;display:block}
+.strip b{font-size:13px}.strip .tr{height:6px;background:var(--sand);border-radius:9px;margin-top:6px;overflow:hidden}.strip .tr i{display:block;height:100%;background:var(--or);box-shadow:0 0 8px var(--or);border-radius:9px}
+.stats{margin-top:8px;text-align:center}.stats>div{background:var(--bg);border-radius:16px;padding:10px 4px;display:flex;flex-direction:column}
+.stats b{font-family:'Bricolage Grotesque';font-size:22px;color:var(--or)}.stats span{font-size:11px;color:var(--mut)}
+.send.alt{background:var(--nav);box-shadow:none}
+.ib{border:0;background:var(--sand);width:30px;height:30px;border-radius:50%;display:grid;place-items:center;color:var(--mut);cursor:pointer;margin-top:4px;margin-left:auto}.ib .i{width:15px;height:15px}
+.verdict{display:inline-block;padding:4px 10px;border-radius:99px;font-size:12px;font-weight:700;background:rgba(52,197,138,.18);color:#1c8a5c}.verdict.hard{background:rgba(255,138,76,.2);color:#c25a1c}.verdict.no{background:#fdeaea;color:#b13a3a}
+#chOut ul{margin:8px 0 0;padding-left:18px;font-size:13px;line-height:1.5}#chOut p{font-size:13.5px;line-height:1.5;margin:8px 0}
+.hidden{display:none}
